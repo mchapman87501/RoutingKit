@@ -51,60 +51,143 @@ foreach(TEST_PROG ${TEST_SOURCES})
     target_link_libraries(${TEST_NAME} ${EXE_LIBS})
 endforeach()
 
+function(omp_test test_name COMMAND exe_target)
+    # Just for fun:
+    if (NOT "${COMMAND}" STREQUAL "COMMAND")
+        message(FATAL_ERROR "Invalid argument ${COMMAND}: Syntax: omp_test(<test_name> COMMAND <test_exe> ...)")
+    endif()
+
+    add_test(
+        NAME ${test_name}
+        COMMAND ${CMAKE_COMMAND} -E env
+            OMP_NUM_THREADS=4
+            $<TARGET_FILE:${exe_target}> ${ARGN}
+    )
+endfunction()
+
 # Match the test definitions from .travis.yml:
-add_test(NAME test_bit_vector COMMAND test_bit_vector)
-add_test(NAME test_buffered_asynchronous_reader COMMAND test_buffered_asynchronous_reader)
-add_test(NAME test_geo_dist COMMAND test_geo_dist)
-add_test(NAME test_id_mapper COMMAND test_id_mapper)
-add_test(NAME test_id_set_queue COMMAND test_id_set_queue)
-add_test(NAME test_inverse_vector COMMAND test_inverse_vector)
-add_test(NAME test_nearest_neighbor COMMAND test_nearest_neighbor)
-add_test(NAME test_nested_dissection COMMAND test_nested_dissection)
-add_test(NAME test_permutation COMMAND test_permutation)
-add_test(NAME test_protobuf COMMAND test_protobuf)
-add_test(NAME test_sort COMMAND test_sort)
-add_test(NAME test_tag_map COMMAND test_tag_map)
-add_test(NAME test_strongly_connected_component COMMAND test_strongly_connected_component)
-add_test(
-    NAME test_customizable_contraction_hierarchy_reset
-    COMMAND test_customizable_contraction_hierarchy_reset)
+omp_test(test_bit_vector COMMAND test_bit_vector)
+omp_test(test_buffered_asynchronous_reader COMMAND test_buffered_asynchronous_reader)
+omp_test(test_geo_dist COMMAND test_geo_dist)
+omp_test(test_id_mapper COMMAND test_id_mapper)
+omp_test(test_id_set_queue COMMAND test_id_set_queue)
+omp_test(test_inverse_vector COMMAND test_inverse_vector)
+omp_test(test_nearest_neighbor COMMAND test_nearest_neighbor)
+omp_test(test_nested_dissection COMMAND test_nested_dissection)
+omp_test(test_permutation COMMAND test_permutation)
+omp_test(test_protobuf COMMAND test_protobuf)
+omp_test(test_sort COMMAND test_sort)
+omp_test(test_tag_map COMMAND test_tag_map)
+omp_test(test_strongly_connected_component COMMAND test_strongly_connected_component)
 
-add_test(NAME test_osm_simple COMMAND test_osm_simple  testing_data/luxembourg.pbf)
-add_dependencies(test_osm_simple  prepare_testing_data)
+omp_test(test_customizable_contraction_hierarchy_reset COMMAND test_customizable_contraction_hierarchy_reset)
 
-add_test(
-    NAME test_dijkstra
-    COMMAND
-        test_dijkstra testing_data/luxembourg_first_out testing_data/luxembourg_head testing_data/luxembourg_travel_time)
-add_dependencies(test_dijkstra  prepare_testing_data)
+omp_test(test_osm_simple COMMAND test_osm_simple testing_data/luxembourg.pbf)
+add_dependencies(test_osm_simple prepare_testing_data)
 
-add_test(NAME test_contraction_hierarchy_extra_weight COMMAND test_contraction_hierarchy_extra_weight  testing_data/luxembourg_first_out testing_data/luxembourg_head testing_data/luxembourg_travel_time testing_data/luxembourg_geo_distance)
-add_dependencies(test_contraction_hierarchy_extra_weight  prepare_testing_data)
+omp_test(test_dijkstra COMMAND
+    test_dijkstra
+    testing_data/luxembourg_first_out
+    testing_data/luxembourg_head
+    testing_data/luxembourg_travel_time)
+add_dependencies(test_dijkstra prepare_testing_data)
 
-add_test(NAME test_contraction_hierarchy_path_query_1 COMMAND test_contraction_hierarchy_path_query  testing_data/luxembourg_first_out testing_data/luxembourg_head testing_data/luxembourg_travel_time testing_data/luxembourg_travel_time_ch testing_data/luxembourg_source_node testing_data/luxembourg_target_node testing_data/luxembourg_query_reference_travel_time_length)
+omp_test(test_contraction_hierarchy_extra_weight COMMAND
+    test_contraction_hierarchy_extra_weight
+    testing_data/luxembourg_first_out
+    testing_data/luxembourg_head
+    testing_data/luxembourg_travel_time
+    testing_data/luxembourg_geo_distance)
+add_dependencies(test_contraction_hierarchy_extra_weight prepare_testing_data)
+
+omp_test(test_contraction_hierarchy_path_query_1 COMMAND
+    test_contraction_hierarchy_path_query
+    testing_data/luxembourg_first_out
+    testing_data/luxembourg_head
+    testing_data/luxembourg_travel_time
+    testing_data/luxembourg_travel_time_ch
+    testing_data/luxembourg_source_node
+    testing_data/luxembourg_target_node
+    testing_data/luxembourg_query_reference_travel_time_length)
 add_dependencies(test_contraction_hierarchy_path_query  prepare_testing_data)
 
-add_test(NAME test_contraction_hierarchy_path_query_2 COMMAND test_contraction_hierarchy_path_query  testing_data/luxembourg_first_out testing_data/luxembourg_head testing_data/luxembourg_geo_distance testing_data/luxembourg_geo_distance_ch testing_data/luxembourg_source_node testing_data/luxembourg_target_node testing_data/luxembourg_query_reference_geo_distance_length)
+omp_test(test_contraction_hierarchy_path_query_2 COMMAND
+    test_contraction_hierarchy_path_query
+    testing_data/luxembourg_first_out
+    testing_data/luxembourg_head
+    testing_data/luxembourg_geo_distance
+    testing_data/luxembourg_geo_distance_ch
+    testing_data/luxembourg_source_node
+    testing_data/luxembourg_target_node
+    testing_data/luxembourg_query_reference_geo_distance_length)
 
-add_test(NAME test_contraction_hierarchy_pinned_query_1 COMMAND test_contraction_hierarchy_pinned_query  testing_data/luxembourg_travel_time_ch)
-add_test(NAME test_contraction_hierarchy_pinned_query_2 COMMAND test_contraction_hierarchy_pinned_query  testing_data/luxembourg_geo_distance_ch)
+omp_test(test_contraction_hierarchy_pinned_query_1 COMMAND
+    test_contraction_hierarchy_pinned_query testing_data/luxembourg_travel_time_ch)
+omp_test(test_contraction_hierarchy_pinned_query_2 COMMAND
+    test_contraction_hierarchy_pinned_query testing_data/luxembourg_geo_distance_ch)
 add_dependencies(test_contraction_hierarchy_pinned_query  prepare_testing_data)
 
-add_test(NAME test_customizable_contraction_hierarchy COMMAND test_customizable_contraction_hierarchy  testing_data/luxembourg_first_out testing_data/luxembourg_head testing_data/luxembourg_cch_order)
+omp_test(test_customizable_contraction_hierarchy COMMAND
+    test_customizable_contraction_hierarchy
+    testing_data/luxembourg_first_out
+    testing_data/luxembourg_head
+    testing_data/luxembourg_cch_order)
 add_dependencies(test_customizable_contraction_hierarchy  prepare_testing_data)
 
-add_test(NAME test_customizable_contraction_hierarchy_path_query_1 COMMAND test_customizable_contraction_hierarchy_path_query  testing_data/luxembourg_first_out testing_data/luxembourg_head testing_data/luxembourg_travel_time testing_data/luxembourg_cch_order testing_data/luxembourg_source_node testing_data/luxembourg_target_node testing_data/luxembourg_query_reference_travel_time_length)
-add_test(NAME test_customizable_contraction_hierarchy_path_query_2 COMMAND test_customizable_contraction_hierarchy_path_query  testing_data/luxembourg_first_out testing_data/luxembourg_head testing_data/luxembourg_geo_distance testing_data/luxembourg_cch_order testing_data/luxembourg_source_node testing_data/luxembourg_target_node testing_data/luxembourg_query_reference_geo_distance_length)
+omp_test(test_customizable_contraction_hierarchy_path_query_1 COMMAND 
+    test_customizable_contraction_hierarchy_path_query
+    testing_data/luxembourg_first_out
+    testing_data/luxembourg_head
+    testing_data/luxembourg_travel_time
+    testing_data/luxembourg_cch_order
+    testing_data/luxembourg_source_node
+    testing_data/luxembourg_target_node
+    testing_data/luxembourg_query_reference_travel_time_length)
+omp_test(test_customizable_contraction_hierarchy_path_query_2 COMMAND 
+    test_customizable_contraction_hierarchy_path_query
+    testing_data/luxembourg_first_out
+    testing_data/luxembourg_head
+    testing_data/luxembourg_geo_distance
+    testing_data/luxembourg_cch_order
+    testing_data/luxembourg_source_node
+    testing_data/luxembourg_target_node
+    testing_data/luxembourg_query_reference_geo_distance_length)
 add_dependencies(test_customizable_contraction_hierarchy_path_query  prepare_testing_data)
 
-add_test(NAME test_customizable_contraction_hierarchy_perfect_customization_1 COMMAND test_customizable_contraction_hierarchy_perfect_customization  testing_data/luxembourg_first_out testing_data/luxembourg_head testing_data/luxembourg_travel_time testing_data/luxembourg_cch_order testing_data/luxembourg_source_node testing_data/luxembourg_target_node testing_data/luxembourg_query_reference_travel_time_length)
-add_test(NAME test_customizable_contraction_hierarchy_perfect_customization_2 COMMAND test_customizable_contraction_hierarchy_perfect_customization  testing_data/luxembourg_first_out testing_data/luxembourg_head testing_data/luxembourg_geo_distance testing_data/luxembourg_cch_order testing_data/luxembourg_source_node testing_data/luxembourg_target_node testing_data/luxembourg_query_reference_geo_distance_length)
+omp_test(test_customizable_contraction_hierarchy_perfect_customization_1 COMMAND 
+    test_customizable_contraction_hierarchy_perfect_customization
+    testing_data/luxembourg_first_out
+    testing_data/luxembourg_head
+    testing_data/luxembourg_travel_time
+    testing_data/luxembourg_cch_order
+    testing_data/luxembourg_source_node
+    testing_data/luxembourg_target_node
+    testing_data/luxembourg_query_reference_travel_time_length)
+omp_test(test_customizable_contraction_hierarchy_perfect_customization_2 COMMAND 
+    test_customizable_contraction_hierarchy_perfect_customization
+    testing_data/luxembourg_first_out
+    testing_data/luxembourg_head
+    testing_data/luxembourg_geo_distance
+    testing_data/luxembourg_cch_order
+    testing_data/luxembourg_source_node
+    testing_data/luxembourg_target_node
+    testing_data/luxembourg_query_reference_geo_distance_length)
 add_dependencies(test_customizable_contraction_hierarchy_perfect_customization  prepare_testing_data)
 
-add_test(NAME test_customizable_contraction_hierarchy_pinned_query_1 COMMAND test_customizable_contraction_hierarchy_pinned_query  testing_data/luxembourg_first_out testing_data/luxembourg_head testing_data/luxembourg_travel_time testing_data/luxembourg_cch_order)
-add_test(NAME test_customizable_contraction_hierarchy_pinned_query_2 COMMAND test_customizable_contraction_hierarchy_pinned_query  testing_data/luxembourg_first_out testing_data/luxembourg_head testing_data/luxembourg_geo_distance testing_data/luxembourg_cch_order)
+omp_test(test_customizable_contraction_hierarchy_pinned_query_1 COMMAND
+    test_customizable_contraction_hierarchy_pinned_query
+    testing_data/luxembourg_first_out
+    testing_data/luxembourg_head
+    testing_data/luxembourg_travel_time
+    testing_data/luxembourg_cch_order)
+omp_test(test_customizable_contraction_hierarchy_pinned_query_2 COMMAND
+    test_customizable_contraction_hierarchy_pinned_query
+    testing_data/luxembourg_first_out
+    testing_data/luxembourg_head
+    testing_data/luxembourg_geo_distance
+    testing_data/luxembourg_cch_order)
 add_dependencies(test_customizable_contraction_hierarchy_pinned_query  prepare_testing_data)
 
-add_test(NAME test_basic_features COMMAND test_basic_features  testing_data/luxembourg.pbf)
+omp_test(test_basic_features COMMAND test_basic_features testing_data/luxembourg.pbf)
 add_dependencies(test_basic_features  prepare_testing_data)
 
